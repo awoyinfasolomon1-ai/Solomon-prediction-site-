@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SOLOMON PREDICTION SITE</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #00FFCC;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #FF00CC;
+      text-transform: uppercase;
+    }
+
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: 30px auto;
+      border-collapse: collapse;
+      background: #222;
+      box-shadow: 0 0 10px #00FFCC;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #00FFCC;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    th {
+      background: #333;
+      color: #00FFCC;
+    }
+
+    footer {
+      margin-top: 40px;
+      font-size: 0.9em;
+      color: #AAA;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔮 SOLOMON PREDICTION SITE</h1>
+
+  <table id="predictionTable">
+    <tr>
+      <th>MATCH</th>
+      <th>1X2</th>
+      <th>OVER/UNDER 2.5</th>
+      <th>BTTS</th>
+    </tr>
+  </table>
+
+  <footer>
+    &copy; 2025 SOLOMON PREDICTOR. POWERED BY BOGGIO ANALYTICS.
+  </footer>
+
+  <script>
+    const table = document.getElementById("predictionTable");
+
+    function fetchBoggioPredictions() {
+      fetch("https://boggio-analytics.com/fp-api/")
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("NETWORK RESPONSE WAS NOT OK");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (!Array.isArray(data) || data.length === 0) {
+            table.innerHTML += `<tr><td colspan="4">NO PREDICTIONS AVAILABLE</td></tr>`;
+            return;
+          }
+
+          table.innerHTML = `
+            <tr>
+              <th>MATCH</th>
+              <th>1X2</th>
+              <th>OVER/UNDER 2.5</th>
+              <th>BTTS</th>
+            </tr>
+          `;
+
+          data.slice(0, 10).forEach(match => {
+            const home = match.home_team?.toUpperCase() || "N/A";
+            const away = match.away_team?.toUpperCase() || "N/A";
+            const classic = match.prediction_per_market?.classic?.prediction?.toUpperCase() || "N/A";
+            const overUnder = match.prediction_per_market?.over25?.prediction?.toUpperCase() || "N/A";
+            const btts = match.prediction_per_market?.btts?.prediction?.toUpperCase() || "N/A";
+
+            const row = table.insertRow();
+            row.insertCell(0).textContent = `${home} VS ${away}`;
+            row.insertCell(1).textContent = classic;
+            row.insertCell(2).textContent = overUnder;
+            row.insertCell(3).textContent = btts;
+          });
+        })
+        .catch(error => {
+          console.error("FETCH ERROR:", error);
+          table.innerHTML += `<tr><td colspan="4">ERROR LOADING PREDICTIONS</td></tr>`;
+        });
+    }
+
+    fetchBoggioPredictions();
+  </script>
+</body>
+</html>
