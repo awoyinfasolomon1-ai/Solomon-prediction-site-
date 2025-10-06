@@ -1,117 +1,114 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>SOLOMON PREDICTION SITE</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #111;
-      color: white;
+      background: #f4f4f4;
       padding: 20px;
-      text-align: center;
     }
-
     h1 {
-      color: #00FFCC;
-      margin-bottom: 20px;
-      text-shadow: 0 0 10px #FF00CC;
-      text-transform: uppercase;
+      text-align: center;
+      font-size: 2em;
+      letter-spacing: 1px;
     }
-
+    #timestamp {
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+    }
     table {
       width: 100%;
-      max-width: 900px;
-      margin: 30px auto;
       border-collapse: collapse;
-      background: #222;
-      box-shadow: 0 0 10px #00FFCC;
+      background: #fff;
+      margin-top: 20px;
     }
-
     th, td {
-      padding: 10px;
-      border: 1px solid #00FFCC;
+      padding: 12px;
+      border: 1px solid #ddd;
       text-align: center;
-      text-transform: uppercase;
     }
-
     th {
-      background: #333;
-      color: #00FFCC;
+      background-color: #007BFF;
+      color: white;
     }
-
-    footer {
-      margin-top: 40px;
-      font-size: 0.9em;
-      color: #AAA;
-      text-transform: uppercase;
+    td {
+      font-size: 16px;
     }
   </style>
 </head>
 <body>
-  <h1>🔮 SOLOMON PREDICTION SITE</h1>
 
-  <table id="predictionTable">
+<h1>SOLOMON PREDICTION SITE</h1>
+<div id="timestamp">Last updated: --</div>
+
+<table id="predictionTable">
+  <thead>
     <tr>
-      <th>MATCH</th>
-      <th>1X2</th>
-      <th>OVER/UNDER 2.5</th>
-      <th>BTTS</th>
+      <th>Home Team</th>
+      <th>Away Team</th>
+      <th>Prediction</th>
+      <th>Confidence</th>
+      <th>Over/Under 2.5</th>
     </tr>
-  </table>
+  </thead>
+  <tbody>
+    <!-- Predictions will be inserted here -->
+  </tbody>
+</table>
 
-  <footer>
-    &copy; 2025 SOLOMON PREDICTOR. POWERED BY BOGGIO ANALYTICS.
-  </footer>
+<script>
+  async function fetchPredictions() {
+    try {
+      const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      const url = `https://football-prediction-api.p.rapidapi.com/api/v2/predictions?market=classic&iso_date=${today}&federation=UEFA`;
 
-  <script>
-    const table = document.getElementById("predictionTable");
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'x-rapidapi-host': 'football-prediction.p.rapidapi.com',
+          'x-rapidapi-key': '624aad1fa3mshd6aeb77bfb13c2ap113329jsnc7281a3719ae'
+        }
+      });
 
-    function fetchBoggioPredictions() {
-      fetch("https://boggio-analytics.com/fp-api/")
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("NETWORK RESPONSE WAS NOT OK");
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (!Array.isArray(data) || data.length === 0) {
-            table.innerHTML += '<tr><td colspan="4">NO PREDICTIONS AVAILABLE</td></tr>';
-            return;
-          }
+      const result = await response.json();
+      const matches = result.data || [];
 
-          table.innerHTML = `
-            <tr>
-              <th>MATCH</th>
-              <th>1X2</th>
-              <th>OVER/UNDER 2.5</th>
-              <th>BTTS</th>
-            </tr>
+      const tableBody = document.querySelector('#predictionTable tbody');
+      tableBody.innerHTML = '';
+
+      if (matches.length > 0) {
+        matches.forEach(match => {
+          const prediction = match.prediction;
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${match.home_team}</td>
+            <td>${match.away_team}</td>
+            <td>${prediction.market_name || 'N/A'}</td>
+            <td>${prediction.probability_home_team_win || 'N/A'}%</td>
+            <td>${prediction.over_25 ? 'Over 2.5' : 'Under 2.5'}</td>
           `;
-
-          data.slice(0, 10).forEach(match => {
-            const home = match.home_team?.toUpperCase() || "N/A";
-            const away = match.away_team?.toUpperCase() || "N/A";
-            const classic = match.prediction_per_market?.classic?.prediction?.toUpperCase() || "N/A";
-            const overUnder = match.prediction_per_market?.over25?.prediction?.toUpperCase() || "N/A";
-            const btts = match.prediction_per_market?.btts?.prediction?.toUpperCase() || "N/A";
-
-            const row = table.insertRow();
-            row.insertCell(0).textContent = `${home} VS ${away}`;
-            row.insertCell(1).textContent = classic;
-            row.insertCell(2).textContent = overUnder;
-            row.insertCell(3).textContent = btts;
-          });
-        })
-        .catch(error => {
-          console.error("FETCH ERROR:", error);
-          table.innerHTML += '<tr><td colspan="4">ERROR LOADING PREDICTIONS</td></tr>';
+          tableBody.appendChild(row);
         });
-    }
+      } else {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td colspan="5">No predictions available</td>`;
+        tableBody.appendChild(row);
+      }
 
-    fetchBoggioPredictions();
-  </script>
+      const now = new Date();
+      document.getElementById('timestamp').textContent = `Last updated: ${now.toLocaleTimeString()}`;
+    } catch (error) {
+      console.error('Error fetching predictions:', error);
+    }
+  }
+
+  fetchPredictions();
+  setInterval(fetchPredictions, 10000);
+</script>
+
 </body>
 </html>
