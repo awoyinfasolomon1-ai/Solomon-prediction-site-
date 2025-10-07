@@ -1,114 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>SOLOMON PREDICTION SITE</title>
+  <title>Video Downloader</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f4f4f4;
       padding: 20px;
+      background: #f4f4f4;
     }
-    h1 {
-      text-align: center;
-      font-size: 2em;
-      letter-spacing: 1px;
+    input {
+      width: 80%;
+      padding: 10px;
+      margin-bottom: 10px;
     }
-    #timestamp {
-      text-align: center;
-      margin-top: 10px;
-      font-size: 14px;
-      color: #555;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 12px;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-    th {
-      background-color: #007BFF;
+    button {
+      padding: 10px 20px;
+      background: #007bff;
       color: white;
+      border: none;
+      cursor: pointer;
     }
-    td {
-      font-size: 16px;
+    pre {
+      background: #fff;
+      padding: 10px;
+      border: 1px solid #ccc;
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   </style>
 </head>
 <body>
+  <h2>Paste YouTube Link</h2>
+  <input type="text" id="videoUrl" placeholder="Enter video URL">
+  <button onclick="downloadVideo()">Download</button>
 
-<h1>SOLOMON PREDICTION SITE</h1>
-<div id="timestamp">Last updated: --</div>
+  <pre id="result"></pre>
 
-<table id="predictionTable">
-  <thead>
-    <tr>
-      <th>Home Team</th>
-      <th>Away Team</th>
-      <th>Prediction</th>
-      <th>Confidence</th>
-      <th>Over/Under 2.5</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!-- Predictions will be inserted here -->
-  </tbody>
-</table>
-
-<script>
-  async function fetchPredictions() {
-    try {
-      const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      const url = `https://football-prediction-api.p.rapidapi.com/api/v2/predictions?market=classic&iso_date=${today}&federation=UEFA`;
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'x-rapidapi-host': 'football-prediction.p.rapidapi.com',
-          'x-rapidapi-key': '624aad1fa3mshd6aeb77bfb13c2ap113329jsnc7281a3719ae'
-        }
+  <script>
+    function downloadVideo() {
+      const url = document.getElementById("videoUrl").value;
+      fetch("https://46fabecc-e288-42e0-8202-c1bc289c3f51-00-1gvwx7b34tegq.kirk.repl.co/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      })
+      .then(res => res.json())
+      .then(data => {
+        document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+      })
+      .catch(err => {
+        document.getElementById("result").textContent = "Error: " + err;
       });
-
-      const result = await response.json();
-      const matches = result.data || [];
-
-      const tableBody = document.querySelector('#predictionTable tbody');
-      tableBody.innerHTML = '';
-
-      if (matches.length > 0) {
-        matches.forEach(match => {
-          const prediction = match.prediction;
-          const row = document.createElement('tr');
-          row.innerHTML = `
-            <td>${match.home_team}</td>
-            <td>${match.away_team}</td>
-            <td>${prediction.market_name || 'N/A'}</td>
-            <td>${prediction.probability_home_team_win || 'N/A'}%</td>
-            <td>${prediction.over_25 ? 'Over 2.5' : 'Under 2.5'}</td>
-          `;
-          tableBody.appendChild(row);
-        });
-      } else {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td colspan="5">No predictions available</td>`;
-        tableBody.appendChild(row);
-      }
-
-      const now = new Date();
-      document.getElementById('timestamp').textContent = `Last updated: ${now.toLocaleTimeString()}`;
-    } catch (error) {
-      console.error('Error fetching predictions:', error);
     }
-  }
-
-  fetchPredictions();
-  setInterval(fetchPredictions, 10000);
-</script>
-
+  </script>
 </body>
 </html>
