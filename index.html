@@ -1,70 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>YouTube Downloader</title>
+  <meta charset="UTF-8">
+  <title>Solomon Tube</title>
   <style>
     body {
-      background-color: #121212;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #b30000;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #fff;
       text-align: center;
-      padding: 40px;
     }
+
+    .container {
+      max-width: 600px;
+      margin: 100px auto;
+      padding: 30px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+    }
+
+    h1 {
+      font-size: 36px;
+      margin-bottom: 20px;
+      color: #ffdddd;
+    }
+
     input[type="text"] {
-      width: 80%;
-      padding: 10px;
+      width: 90%;
+      padding: 12px;
       font-size: 16px;
-      border-radius: 5px;
       border: none;
+      border-radius: 6px;
       margin-bottom: 20px;
     }
+
     button {
-      padding: 10px 20px;
+      padding: 12px 24px;
       font-size: 16px;
-      background-color: #1e88e5;
+      background-color: #ff4d4d;
       color: white;
       border: none;
-      border-radius: 5px;
+      border-radius: 6px;
       cursor: pointer;
+      transition: background-color 0.3s ease;
     }
-    #result {
-      margin-top: 30px;
-      font-size: 16px;
+
+    button:hover {
+      background-color: #e60000;
     }
-    a {
-      color: #4caf50;
-      text-decoration: none;
+
+    #message {
+      margin-top: 20px;
+      font-size: 18px;
       font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h1>Paste YouTube Link</h1>
-  <input type="text" id="videoUrl" placeholder="Enter YouTube URL here" />
-  <br />
-  <button onclick="downloadVideo()">Download</button>
-  <div id="result"></div>
+  <div class="container">
+    <h1>Solomon Tube</h1>
+    <input type="text" id="ytLink" placeholder="Paste YouTube link here">
+    <br>
+    <button onclick="downloadVideo()">Download</button>
+    <p id="message"></p>
+  </div>
 
   <script>
     function downloadVideo() {
-      const url = document.getElementById("videoUrl").value;
+      const ytLink = document.getElementById("ytLink").value;
 
       fetch("https://46fabecc-e288-42e0-8202-c1bc289c3f51-00-1gvwx7b34tegq.kirk.repl.co/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url: ytLink })
       })
       .then(response => {
-        if (!response.ok) throw new Error("Download failed");
+        if (!response.ok) throw new Error("Failed to fetch video");
         return response.blob();
       })
       .then(blob => {
-        const videoUrl = URL.createObjectURL(blob);
-        const resultBox = document.getElementById("result");
-        resultBox.innerHTML = `<a href="${videoUrl}" download="video.mp4">📥 Click here to download</a>`;
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "video.mp4";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        document.getElementById("message").innerText = "✅ Video downloaded!";
       })
-      .catch(err => {
-        document.getElementById("result").textContent = "Error: " + err.message;
+      .catch(error => {
+        document.getElementById("message").innerText = `⚠️ Error: ${error.message}`;
       });
     }
   </script>
