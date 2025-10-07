@@ -1,63 +1,70 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Video Downloader</title>
+  <title>YouTube Downloader</title>
   <style>
     body {
+      background-color: #121212;
+      color: #ffffff;
       font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f4f4f4;
+      text-align: center;
+      padding: 40px;
     }
-    input {
+    input[type="text"] {
       width: 80%;
       padding: 10px;
-      margin-bottom: 10px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      font-size: 16px;
+      border-radius: 5px;
+      border: none;
+      margin-bottom: 20px;
     }
     button {
       padding: 10px 20px;
-      background: #007bff;
+      font-size: 16px;
+      background-color: #1e88e5;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
-      background: #0056b3;
+    #result {
+      margin-top: 30px;
+      font-size: 16px;
     }
-    pre {
-      background: #fff;
-      padding: 10px;
-      border: 1px solid #ccc;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      border-radius: 4px;
+    a {
+      color: #4caf50;
+      text-decoration: none;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <h2>Paste YouTube Link</h2>
-  <input type="text" id="videoUrl" placeholder="Enter video URL">
+  <h1>Paste YouTube Link</h1>
+  <input type="text" id="videoUrl" placeholder="Enter YouTube URL here" />
+  <br />
   <button onclick="downloadVideo()">Download</button>
-
-  <pre id="result"></pre>
+  <div id="result"></div>
 
   <script>
     function downloadVideo() {
       const url = document.getElementById("videoUrl").value;
 
-      fetch("https://46fabecc-e288-42e0-8202-c1bc289c3f51-00-1gvwx7b34tegq.kirk.repl.co:3000/download", {
+      fetch("https://46fabecc-e288-42e0-8202-c1bc289c3f51-00-1gvwx7b34tegq.kirk.repl.co/download", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url })
       })
-      .then(res => res.json())
-      .then(data => {
-        document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+      .then(response => {
+        if (!response.ok) throw new Error("Download failed");
+        return response.blob();
+      })
+      .then(blob => {
+        const videoUrl = URL.createObjectURL(blob);
+        const resultBox = document.getElementById("result");
+        resultBox.innerHTML = `<a href="${videoUrl}" download="video.mp4">📥 Click here to download</a>`;
       })
       .catch(err => {
-        document.getElementById("result").textContent = "Error: " + err;
+        document.getElementById("result").textContent = "Error: " + err.message;
       });
     }
   </script>
