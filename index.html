@@ -2,99 +2,77 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Solomon Tube</title>
+  <title>Malachi — SOLOMON Bible Explorer</title>
   <style>
     body {
       margin: 0;
       padding: 0;
-      background-color: #b30000;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: #fff;
-      text-align: center;
+      background-color: red;
+      color: white;
+      font-family: Arial, sans-serif;
     }
 
-    .container {
-      max-width: 600px;
-      margin: 100px auto;
-      padding: 30px;
-      background-color: rgba(255, 255, 255, 0.1);
+    .border-wrapper {
+      padding: 12px;
+      background: linear-gradient(45deg, #fbc2eb, #a6c1ee, #d4fc79, #96e6a1);
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .inner-content {
+      background-color: red;
       border-radius: 12px;
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      padding: 30px;
     }
 
     h1 {
-      font-size: 36px;
-      margin-bottom: 20px;
-      color: #ffdddd;
+      text-align: center;
+      font-size: 2.5em;
+      margin-bottom: 10px;
     }
 
-    input[type="text"] {
-      width: 90%;
-      padding: 12px;
-      font-size: 16px;
-      border: none;
-      border-radius: 6px;
-      margin-bottom: 20px;
+    h2 {
+      text-align: center;
+      font-size: 2em;
+      margin-bottom: 30px;
     }
 
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #ff4d4d;
+    .back-link {
+      display: block;
+      margin-bottom: 20px;
+      font-size: 1.2em;
       color: white;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
+      text-decoration: none;
     }
 
-    button:hover {
-      background-color: #e60000;
+    .back-link:hover {
+      text-decoration: underline;
     }
 
-    #message {
+    .chapter-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
       margin-top: 20px;
-      font-size: 18px;
-      font-weight: bold;
+    }
+
+    .chapter-grid a {
+      background-color: #ffffff22;
+      color: yellow;
+      text-decoration: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 1.2em;
+      transition: background-color 0.3s;
+    }
+
+    .chapter-grid a:hover {
+      background-color: #ffffff55;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Solomon Tube</h1>
-    <input type="text" id="ytLink" placeholder="Paste YouTube link here">
-    <br>
-    <button onclick="downloadVideo()">Download</button>
-    <p id="message"></p>
-  </div>
-
-  <script>
-    function downloadVideo() {
-      const ytLink = document.getElementById("ytLink").value;
-
-      fetch("https://46fabecc-e288-42e0-8202-c1bc289c3f51-00-1gvwx7b34tegq.kirk.repl.co/download", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: ytLink })
-      })
-      .then(response => {
-        if (!response.ok) throw new Error("Failed to fetch video");
-        return response.blob();
-      })
-      .then(blob => {
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "video.mp4";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        document.getElementById("message").innerText = "✅ Video downloaded!";
-      })
-      .catch(error => {
-        document.getElementById("message").innerText = `⚠️ Error: ${error.message}`;
-      });
-    }
-  </script>
-</body>
-</html>
+  <div class="border-wrapper">
+    <div class="inner-content">
+      <a href="index
