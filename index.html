@@ -1,177 +1,262 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>SOLOMON Bible Explorer</title>
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: red;
-      color: white;
-      font-family: Arial, sans-serif;
+  }
+  localStorage.setItem('lastLevel', currentLevel);
+  
+  generateLevelButtons(); 
+
+  // LOGIC: Auto-start the next level
+  if (currentLevel <= maxLevel) {
+      const message = unlockedNewLevel 
+          ? ``New level unlocked! Level ${currentLevel} selected. Starting in 1 second...`
+          : `Level ${currentLevel} selected. Starting in 1 second...`;
+          
+      statusDiv.textContent = message;
+      document.getElementById('levelSelectionContainer').style.display = 'none'; 
+      document.getElementById('game').style.display = 'grid'; 
+      
+      setTimeout(() => {
+          startGame();
+      }, 1000);
+  } else {
+      statusDiv.textContent = `You have beaten all ${maxLevel} levels, ${playerName}!`;
+      // Return to level selection if all levels are beaten
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('restartBtn').style.display = 'none';
+      document.getElementById('levelSelectionContainer').style.display = 'block';
+  }
+}
+
+// Restart current level
+function restartLevel() {
+  statusDiv.textContent = `Level ${currentLevel} restarted. Good luck, ${playerName}!`;
+  setTimeout(startGame, 500);
+}
+
+// Make move (UI update)
+function makeMove(row, col, player) {
+  board[row][col] = player;
+  const index = row * 3 + col;
+  document.querySelector(`.cell[data-index='${index}']`).textContent = player;
+}
+
+/* --- AI Logic (Difficulty Scaling) --- */
+function checkWin(bd, player) {
+  for (let i = 0; i < 3; i++) {
+    if (bd[i][0] === player && bd[i][1] === player && bd[i][2] === player) return true;
+    if (bd[0][i] === player && bd[1][i] === player && bd[2][i] === player) return true;
+  }
+  if (bd[0][0] === player && bd[1][1] === player && bd[2][2] === player) return true;
+  if (bd[0][2] === player && bd[1][1] === player && bd[2][0] === player) return true;
+  return false;
+}
+function isBoardFull(bd) {
+  return bd.flat().every(cell => cell !== '');
+}
+function getAvailableMoves(bd) {
+  const moves = [];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (bd[r][c] === '') {
+        moves.push({row: r, col: c});
+      }
     }
+  }
+  return moves;
+}
+function getRandomMove(bd) {
+  const moves = getAvailableMoves(bd);
+  if (moves.length === 0) return null;
+  return moves[Math.floor(Math.random() * moves.length)];
+}
 
-    .search-container {
-      text-align: center;
-      margin-bottom: 20px;
+function getAIMove(bd) {
+    if (currentLevel >= 15) {
+        return getBestMove(bd);
+    } else if (currentLevel >= 5) {
+        const minimaxChance = 0.5 + (currentLevel - 5) * 0.05; 
+        if (Math.random() < minimaxChance) {
+            return getBestMove(bd);
+        } else {
+            return getRandomMove(bd);
+        }
+    } else {
+        return getRandomMove(bd);
     }
+}
 
-    #searchInput {
-      padding: 10px;
-      width: 60%;
-      font-size: 1.2em;
-      border-radius: 8px;
-      border: none;
+function getBestMove(bd) {
+  let bestScore = -Infinity;
+  let move = null;
+  for (const m of getAvailableMoves(bd)) {
+    bd[m.row][m.col] = ai;
+    const score = minimax(bd, 0, false);
+    bd[m.row][m.col] = '';
+    if (score > bestScore) {
+      bestScore = score;
+      move = m;
     }
-
-    .border-wrapper {
-      padding: 12px;
-      background: linear-gradient(45deg, #fbc2eb, #a6c1ee, #d4fc79, #96e6a1);
-      min-height: 100vh;
-      box-sizing: border-box;
+  }
+  return move;
+}
+function minimax(bd, depth, isMax) {
+  if (checkWin(bd, ai)) return 10 - depth;
+  if (checkWin(bd, human)) return depth - 10;
+  if (isBoardFull(bd)) return 0;
+  if (isMax) {
+    let maxEval = -Infinity;
+    for (const m of getAvailableMoves(bd)) {
+      bd[m.row][m.col] = ai;
+      const evalScore = minmax(bd, depth + 1, false);
+      bd[m.row][m.col] = ''; 
+      maxEval = Math.max(maxEval, evalScore);
     }
-
-    .inner-content {
-      background-color: red;
-      border-radius: 12px;
-      padding: 30px;
+    return maxEval;
+  } else {
+    let minEval = Infinity;
+    for (const m of getAvailableMoves(bd)) {
+      bd[m.row][m.col] = human;
+      const evalScore = minmax(bd, depth + 1, true);
+      bd[m.row][m.col] = '';
+      minEval = Math.min(minEval, evalScore);
     }
+    return minEval;
+  }
+}
+// Re-call generateLevelButtons if the page is loaded with a stored name
+if(playerName) {
+    generateLevelButtons();
+}
+</script>
 
-    h1 {
-      text-align: center;
-      font-size: 3em;
-      margin-bottom: 30px;
-    }
-
-    h2 {
-      text-align: center;
-      font-size: 2em;
-      margin-top: 40px;
-      margin-bottom: 20px;
-    }
-
-    ul.book-list {
-      list-style: none;
-      padding-left: 0;
-      font-size: 1.5em;
-      line-height: 2em;
-      text-align: left;
-      max-width: 400px;
-      margin: auto;
-    }
-
-    ul.book-list li a {
-      color: white;
-      text-decoration: none;
-      display: block;
-      padding: 8px 12px;
-      border-radius: 6px;
-    }
-
-    ul.book-list li a:hover {
-      background-color: #ffffff33;
-      text-decoration: underline;
-    }
-  </style>
-</head>
-<body>
-  <div class="border-wrapper">
-    <div class="inner-content">
-      <h1>SOLOMON Bible Explorer</h1>
-
-      <!-- 🔍 Search Bar -->
-      <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search book name..." onkeyup="searchBooks()" />
-      </div>
-
-      <!-- 📖 Book List -->
-      <div id="bookList">
-        <h2>Old Testament</h2>
-        <ul class="book-list">
-          <li><a href="genesis.html">Genesis</a></li>
-          <li><a href="exodus.html">Exodus</a></li>
-          <li><a href="leviticus.html">Leviticus</a></li>
-          <li><a href="numbers.html">Numbers</a></li>
-          <li><a href="deuteronomy.html">Deuteronomy</a></li>
-          <li><a href="joshua.html">Joshua</a></li>
-          <li><a href="judges.html">Judges</a></li>
-          <li><a href="ruth.html">Ruth</a></li>
-          <li><a href="1samuel.html">1 Samuel</a></li>
-          <li><a href="2samuel.html">2 Samuel</a></li>
-          <li><a href="1kings.html">1 Kings</a></li>
-          <li><a href="2kings.html">2 Kings</a></li>
-          <li><a href="1chronicles.html">1 Chronicles</a></li>
-          <li><a href="2chronicles.html">2 Chronicles</a></li>
-          <li><a href="ezra.html">Ezra</a></li>
-          <li><a href="nehemiah.html">Nehemiah</a></li>
-          <li><a href="esther.html">Esther</a></li>
-          <li><a href="job.html">Job</a></li>
-          <li><a href="psalms.html">Psalms</a></li>
-          <li><a href="proverbs.html">Proverbs</a></li>
-          <li><a href="ecclesiastes.html">Ecclesiastes</a></li>
-          <li><a href="songofsolomon.html">Song of Solomon</a></li>
-          <li><a href="isaiah.html">Isaiah</a></li>
-          <li><a href="jeremiah.html">Jeremiah</a></li>
-          <li><a href="lamentations.html">Lamentations</a></li>
-          <li><a href="ezekiel.html">Ezekiel</a></li>
-          <li><a href="daniel.html">Daniel</a></li>
-          <li><a href="hosea.html">Hosea</a></li>
-          <li><a href="joel.html">Joel</a></li>
-          <li><a href="amos.html">Amos</a></li>
-          <li><a href="obadiah.html">Obadiah</a></li>
-          <li><a href="jonah.html">Jonah</a></li>
-          <li><a href="micah.html">Micah</a></li>
-<li><a href="nahum.html">Nahum</a></li>
-<li><a href="habakkuk.html">Habakkuk</a></li>
-<li><a href="zephaniah.html">Zephaniah</a></li>
-<li><a href="haggai.html">Haggai</a></li>
-<li><a href="zechariah.html">Zechariah</a></li>
-<li><a href="malachi.html">Malachi</a></li>
-</ul>    <h2>New Testament</h2>
-    <ul class="book-list">
-      <li><a href="matthew.html">Matthew</a></li>
-      <li><a href="mark.html">Mark</a></li>
-      <li><a href="luke.html">Luke</a></li>
-      <li><a href="john.html">John</a></li>
-      <li><a href="acts.html">Acts</a></li>
-      <li><a href="romans.html">Romans</a></li>
-      <li><a href="1corinthians.html">1 Corinthians</a></li>
-      <li><a href="2corinthians.html">2 Corinthians</a></li>
-      <li><a href="galatians.html">Galatians</a></li>
-      <li><a href="ephesians.html">Ephesians</a></li>
-      <li><a href="philippians.html">Philippians</a></li>
-      <li><a href="colossians.html">Colossians</a></li>
-      <li><a href="1thessalonians.html">1 Thessalonians</a></li>
-      <li><a href="2thessalonians.html">2 Thessalonians</a></li>
-      <li><a href="1timothy.html">1 Timothy</a></li>
-      <li><a href="2timothy.html">2 Timothy</a></li>
-      <li><a href="titus.html">Titus</a></li>
-      <li><a href="philemon.html">Philemon</a></li>
-      <li><a href="hebrews.html">Hebrews</a></li>
-      <li><a href="james.html">James</a></li>
-      <li><a href="1peter.html">1 Peter</a></li>
-      <li><a href="2peter.html">2 Peter</a></li>
-      <li><a href="1john.html">1 John</a></li>
-      <li><a href="2john.html">2 John</a></li>
-      <li><a href="3john.html">3 John</a></li>
-      <li><a href="jude.html">Jude</a></li>
-      <li><a href="revelation.html">Revelation</a></li>
-    </ul>
-  </div>
-</div>
-
-  <!-- 🔧 Search Script -->
-  <script>
-    function searchBooks() {
-      const input = document.getElementById('searchInput').value.toLowerCase();
-      const links = document.querySelectorAll('#bookList a');
-      links.forEach(link => {
-        const text = link.textContent.toLowerCase();
-        link.style.display = text.includes(input) ? 'block' : 'none';
-      });
-    }
-  </script>
 </body>
 </html>
-    
+  }
+  localStorage.setItem('lastLevel', currentLevel);
+  
+  generateLevelButtons(); 
+
+  // LOGIC: Auto-start the next level
+  if (currentLevel <= maxLevel) {
+      const message = unlockedNewLevel 
+          ? ``New level unlocked! Level ${currentLevel} selected. Starting in 1 second...`
+          : `Level ${currentLevel} selected. Starting in 1 second...`;
+          
+      statusDiv.textContent = message;
+      document.getElementById('levelSelectionContainer').style.display = 'none'; 
+      document.getElementById('game').style.display = 'grid'; 
+      
+      setTimeout(() => {
+          startGame();
+      }, 1000);
+  } else {
+      statusDiv.textContent = `You have beaten all ${maxLevel} levels, ${playerName}!`;
+      // Return to level selection if all levels are beaten
+      document.getElementById('game').style.display = 'none';
+      document.getElementById('restartBtn').style.display = 'none';
+      document.getElementById('levelSelectionContainer').style.display = 'block';
+  }
+}
+
+// Restart current level
+function restartLevel() {
+  statusDiv.textContent = `Level ${currentLevel} restarted. Good luck, ${playerName}!`;
+  setTimeout(startGame, 500);
+}
+
+// Make move (UI update)
+function makeMove(row, col, player) {
+  board[row][col] = player;
+  const index = row * 3 + col;
+  document.querySelector(`.cell[data-index='${index}']`).textContent = player;
+}
+
+/* --- AI Logic (Difficulty Scaling) --- */
+function checkWin(bd, player) {
+  for (let i = 0; i < 3; i++) {
+    if (bd[i][0] === player && bd[i][1] === player && bd[i][2] === player) return true;
+    if (bd[0][i] === player && bd[1][i] === player && bd[2][i] === player) return true;
+  }
+  if (bd[0][0] === player && bd[1][1] === player && bd[2][2] === player) return true;
+  if (bd[0][2] === player && bd[1][1] === player && bd[2][0] === player) return true;
+  return false;
+}
+function isBoardFull(bd) {
+  return bd.flat().every(cell => cell !== '');
+}
+function getAvailableMoves(bd) {
+  const moves = [];
+  for (let r = 0; r < 3; r++) {
+    for (let c = 0; c < 3; c++) {
+      if (bd[r][c] === '') {
+        moves.push({row: r, col: c});
+      }
+    }
+  }
+  return moves;
+}
+function getRandomMove(bd) {
+  const moves = getAvailableMoves(bd);
+  if (moves.length === 0) return null;
+  return moves[Math.floor(Math.random() * moves.length)];
+}
+
+function getAIMove(bd) {
+    if (currentLevel >= 15) {
+        return getBestMove(bd);
+    } else if (currentLevel >= 5) {
+        const minimaxChance = 0.5 + (currentLevel - 5) * 0.05; 
+        if (Math.random() < minimaxChance) {
+            return getBestMove(bd);
+        } else {
+            return getRandomMove(bd);
+        }
+    } else {
+        return getRandomMove(bd);
+    }
+}
+
+function getBestMove(bd) {
+  let bestScore = -Infinity;
+  let move = null;
+  for (const m of getAvailableMoves(bd)) {
+    bd[m.row][m.col] = ai;
+    const score = minimax(bd, 0, false);
+    bd[m.row][m.col] = '';
+    if (score > bestScore) {
+      bestScore = score;
+      move = m;
+    }
+  }
+  return move;
+}
+function minimax(bd, depth, isMax) {
+  if (checkWin(bd, ai)) return 10 - depth;
+  if (checkWin(bd, human)) return depth - 10;
+  if (isBoardFull(bd)) return 0;
+  if (isMax) {
+    let maxEval = -Infinity;
+    for (const m of getAvailableMoves(bd)) {
+      bd[m.row][m.col] = ai;
+      const evalScore = minmax(bd, depth + 1, false);
+      bd[m.row][m.col] = ''; 
+      maxEval = Math.max(maxEval, evalScore);
+    }
+    return maxEval;
+  } else {
+    let minEval = Infinity;
+    for (const m of getAvailableMoves(bd)) {
+      bd[m.row][m.col] = human;
+      const evalScore = minmax(bd, depth + 1, true);
+      bd[m.row][m.col] = '';
+      minEval = Math.min(minEval, evalScore);
+    }
+    return minEval;
+  }
+}
+// Re-call generateLevelButtons if the page is loaded with a stored name
+if(playerName) {
+    generateLevelButtons();
+}
+</script>
+
+</body>
+</html> 
